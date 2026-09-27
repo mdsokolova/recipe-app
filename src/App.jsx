@@ -1,122 +1,78 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import video from "./assets/food.mp4";
+import img from "./assets/fry.png";
+import MyRecipesComponents from "./myRecipesComponents";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const MY_KEY = import.meta.env.VITE_SPOONACULAR_KEY;
+  const [mySearch, setMySearch] = useState("");
+  const [myRecipe, setMyRecipe] = useState([]);
+  const [wordSubmitted, setWordSubmitted] = useState("lemon");
+
+  useEffect(() => {
+    const getRecipe = async () => {
+      const response = await fetch(
+        `https://api.spoonacular.com/recipes/complexSearch?query=${wordSubmitted}&minCalories=0&fillIngredients=true&apiKey=${MY_KEY}`
+      );
+
+      if (!response.ok) {
+        console.error("Request failed:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log(data);
+      setMyRecipe(data.results);
+    };
+
+    getRecipe();
+  }, [wordSubmitted]);
+
+  const myRecipeSearch = (e) => {
+    setMySearch(e.target.value);
+  };
+
+  const finalSearch = (e) => {
+    e.preventDefault();
+    setWordSubmitted(mySearch);
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1> started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="App">
+      <video autoPlay muted loop>
+        <source src={video} type="video/mp4" />
+      </video>
 
-      <div className="ticks"></div>
+      <div className="container">
+        <h1>Find a Recipe</h1>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <div className="container">
+        <form className="search-form" onSubmit={finalSearch}>
+          <input
+            className="search"
+            placeholder="Search for recipes..."
+            onChange={myRecipeSearch}
+            value={mySearch}
+          />
+          <button className="search-btn">
+            <img src={img} alt="search" />
+          </button>
+        </form>
+      </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {myRecipe.map((element) => (
+        <MyRecipesComponents
+          key={element.id}
+          title={element.title}
+          image={element.image}
+          calories={element.nutrition.nutrients[0].amount}
+          ingredients={element.missedIngredients}
+        />
+      ))}
+    </div>
+  );
 }
 
-export default App
+export default App;
